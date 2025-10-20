@@ -1,0 +1,27 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 党徽元素 - 简化版 -->
+  <g opacity="0.15">
+    <!-- 外圈 -->
+    <circle cx="100" cy="100" r="90" fill="none" stroke="#d32f2f" stroke-width="4"/>
+    
+    <!-- 五角星 -->
+    <path d="M100 30 L110 65 L145 65 L118 85 L128 120 L100 100 L72 120 L82 85 L55 65 L90 65 Z" 
+          fill="#d32f2f" opacity="0.9"/>
+    
+    <!-- 镰刀 -->
+    <path d="M70 110 Q60 115 55 125 Q50 135 55 145 Q60 155 70 155 L75 150 Q68 150 65 143 Q62 136 65 130 Q68 124 75 120 Z" 
+          fill="#d32f2f" opacity="0.85"/>
+    
+    <!-- 锤子 -->
+    <path d="M120 115 L125 110 L135 120 L130 125 Z M123 112 L128 140 L132 140 L127 112 Z" 
+          fill="#d32f2f" opacity="0.85"/>
+    
+    <!-- 光芒 -->
+    <path d="M100 20 L102 40 L98 40 Z" fill="#ffd700" opacity="0.6"/>
+    <path d="M140 35 L138 53 L135 51 Z" fill="#ffd700" opacity="0.6"/>
+    <path d="M165 65 L148 70 L148 66 Z" fill="#ffd700" opacity="0.6"/>
+    <path d="M60 35 L62 53 L65 51 Z" fill="#ffd700" opacity="0.6"/>
+    <path d="M35 65 L52 70 L52 66 Z" fill="#ffd700" opacity="0.6"/>
+  </g>
+</svg>
+
