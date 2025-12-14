@@ -21,8 +21,7 @@
  */
 export const UserRole = {
   USER: 1,           // 普通用户
-  TEACHER: 2,        // 教师
-  ADMIN: 3           // 系统管理员
+  ADMIN: 2           // 系统管理员
 }
 
 /**
@@ -30,8 +29,7 @@ export const UserRole = {
  */
 export const UserRoleNames = {
   1: '普通用户',
-  2: '教师',
-  3: '系统管理员'
+  2: '系统管理员'
 }
 
 /**

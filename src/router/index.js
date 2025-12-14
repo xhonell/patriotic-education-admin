@@ -66,6 +66,24 @@ const routes = [
         meta: { title: '轮播图管理', icon: 'Picture' }
       },
       {
+        path: 'politic',
+        name: 'PoliticManagement',
+        component: () => import('@/views/content/politic.vue'),
+        meta: { title: '政治面貌管理', icon: 'Collection' }
+      },
+      {
+        path: 'age-range',
+        name: 'AgeRangeManagement',
+        component: () => import('@/views/content/age-range.vue'),
+        meta: { title: '年龄段管理', icon: 'Timer' }
+      },
+      {
+        path: 'difficulty',
+        name: 'DifficultyManagement',
+        component: () => import('@/views/content/difficulty.vue'),
+        meta: { title: '积分难度管理', icon: 'Star' }
+      },
+      {
         path: 'add',
         name: 'ContentAdd',
         component: () => import('@/views/content/add.vue'),
@@ -104,6 +122,18 @@ const routes = [
         name: 'SystemSettings',
         component: () => import('@/views/system/settings.vue'),
         meta: { title: '系统设置', icon: 'Setting' }
+      },
+      {
+        path: 'role',
+        name: 'RoleManagement',
+        component: () => import('@/views/content/role.vue'),
+        meta: { title: '角色管理', icon: 'UserFilled' }
+      },
+      {
+        path: 'permission',
+        name: 'PermissionManagement',
+        component: () => import('@/views/content/permission.vue'),
+        meta: { title: '权限管理', icon: 'Lock' }
       }
     ]
   }

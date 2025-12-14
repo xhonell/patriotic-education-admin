@@ -32,8 +32,7 @@
             style="width: 150px"
           >
             <el-option label="普通用户" :value="1" />
-            <el-option label="教师" :value="2" />
-            <el-option label="系统管理员" :value="3" />
+            <el-option label="系统管理员" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item>
