@@ -84,7 +84,7 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right" align="center">
+        <el-table-column label="操作" width="280" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-tooltip content="查看详情" placement="top">
@@ -94,6 +94,16 @@
                   circle 
                   size="small"
                   @click="handleView(row)"
+                />
+              </el-tooltip>
+              <el-tooltip :content="isNormalUser(row) ? '普通用户不可分配角色' : '分配角色'" placement="top">
+                <el-button 
+                  type="success" 
+                  :icon="UserFilled" 
+                  circle 
+                  size="small"
+                  :disabled="isNormalUser(row)"
+                  @click="handleAssignRole(row)"
                 />
               </el-tooltip>
               <el-tooltip content="编辑用户" placement="top">
@@ -132,20 +142,34 @@
         />
       </div>
     </div>
+
+    <!-- 角色分配对话框 -->
+    <UserRoleDialog 
+      :visible="roleDialogVisible"
+      @update:visible="roleDialogVisible = $event"
+      :userData="selectedUser"
+      @success="handleRoleAssignSuccess"
+    />
   </div>
 </template>
 
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { View, Edit, Delete, Search, Refresh } from '@element-plus/icons-vue'
+import { View, Edit, Delete, Search, Refresh, UserFilled } from '@element-plus/icons-vue'
 import { getUserList, updateUserStatus, deleteUser } from '@/api/user'
 import { getRoleName, formatTime } from '@/types/user'
+import UserRoleDialog from '@/components/UserRoleDialog.vue'
 
 export default {
   name: 'UserList',
+  components: {
+    UserRoleDialog
+  },
   setup() {
     const loading = ref(false)
+    const roleDialogVisible = ref(false)
+    const selectedUser = ref({})
     
     const searchForm = reactive({
       username: '',
@@ -233,6 +257,22 @@ export default {
       ElMessage.info(`查看用户：${row.username}`)
     }
 
+    // 分配角色
+    const handleAssignRole = (row) => {
+      if (isNormalUser(row)) {
+        ElMessage.warning('普通用户不可分配角色')
+        return
+      }
+      selectedUser.value = row
+      roleDialogVisible.value = true
+    }
+
+    // 角色分配成功回调
+    const handleRoleAssignSuccess = () => {
+      ElMessage.success('角色分配成功')
+      loadUserList()
+    }
+
     // 编辑用户
     const handleEdit = (row) => {
       ElMessage.info(`编辑用户：${row.username}`)
@@ -279,10 +319,16 @@ export default {
     const getRoleType = (role) => {
       const types = {
         1: 'info',     // 普通用户
-        2: 'warning',  // 教师
-        3: 'danger'    // 系统管理员
+        2: 'danger'    // 系统管理员（保持与 UserRoleNames 映射一致）
       }
       return types[role] || 'info'
+    }
+
+    // 判断是否为普通用户（不可分配角色）
+    const isNormalUser = (row) => {
+      if (!row) return false
+      // 约定：role === 1 表示普通用户；兼容可能存在的字段名
+      return row.role === 1 || row.userRole === 1 || row.identity === '普通用户'
     }
 
     // 页面加载时获取数据
@@ -295,6 +341,8 @@ export default {
       searchForm,
       pagination,
       userList,
+      roleDialogVisible,
+      selectedUser,
       getRoleName,
       formatTime,
       getRoleType,
@@ -303,16 +351,20 @@ export default {
       handleReset,
       handleStatusChange,
       handleView,
+      handleAssignRole,
+      handleRoleAssignSuccess,
       handleEdit,
       handleDelete,
       handleSizeChange,
       handleCurrentChange,
+      isNormalUser,
       // 图标
       View,
       Edit,
       Delete,
       Search,
-      Refresh
+      Refresh,
+      UserFilled
     }
   }
 }

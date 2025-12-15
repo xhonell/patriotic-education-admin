@@ -4,7 +4,7 @@
     <div class="phoenix-decoration phoenix-left-large"></div>
     <div class="phoenix-decoration phoenix-right-large"></div>
     <div class="phoenix-center"></div>
-    
+
     <el-container class="main-container">
       <!-- 侧边栏 -->
       <el-aside width="240px" class="sidebar">
@@ -13,7 +13,7 @@
           <h2 class="logo-title gradient-text">爱国教育平台</h2>
           <div class="logo-subtitle">管理系统</div>
         </div>
-        
+
         <el-menu
           :default-active="activeMenu"
           class="sidebar-menu"
@@ -22,7 +22,10 @@
         >
           <template v-for="route in menuRoutes" :key="route.path">
             <!-- 有子菜单 -->
-            <el-sub-menu v-if="route.children && route.children.length > 1" :index="route.path">
+            <el-sub-menu
+              v-if="route.children && route.children.length > 1"
+              :index="route.path"
+            >
               <template #title>
                 <el-icon><component :is="route.meta.icon" /></el-icon>
                 <span>{{ route.meta.title }}</span>
@@ -36,7 +39,7 @@
                 <span>{{ child.meta.title }}</span>
               </el-menu-item>
             </el-sub-menu>
-            
+
             <!-- 单个菜单 -->
             <el-menu-item
               v-else-if="route.children && route.children.length === 1"
@@ -47,13 +50,29 @@
             </el-menu-item>
           </template>
         </el-menu>
-        
+
         <!-- 中国结装饰 -->
         <div class="chinese-knot">
           <svg width="80" height="80" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="30" fill="none" stroke="#e63946" stroke-width="3" opacity="0.6"/>
-            <circle cx="50" cy="50" r="20" fill="none" stroke="#f9ca24" stroke-width="2" opacity="0.6"/>
-            <circle cx="50" cy="50" r="10" fill="#e63946" opacity="0.6"/>
+            <circle
+              cx="50"
+              cy="50"
+              r="30"
+              fill="none"
+              stroke="#e63946"
+              stroke-width="3"
+              opacity="0.6"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="20"
+              fill="none"
+              stroke="#f9ca24"
+              stroke-width="2"
+              opacity="0.6"
+            />
+            <circle cx="50" cy="50" r="10" fill="#e63946" opacity="0.6" />
           </svg>
         </div>
       </el-aside>
@@ -64,16 +83,18 @@
           <div class="header-left">
             <el-breadcrumb separator="/">
               <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-              <el-breadcrumb-item v-if="currentRoute">{{ currentRoute }}</el-breadcrumb-item>
+              <el-breadcrumb-item v-if="currentRoute">{{
+                currentRoute
+              }}</el-breadcrumb-item>
             </el-breadcrumb>
           </div>
-          
+
           <div class="header-right">
             <div class="header-time">
               <el-icon><Clock /></el-icon>
               <span>{{ currentTime }}</span>
             </div>
-            
+
             <el-dropdown @command="handleCommand">
               <div class="user-info">
                 <el-avatar :size="36" :src="userAvatar" />
@@ -83,9 +104,15 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item disabled>
-                    <div style="text-align: center; padding: 5px 0;">
-                      <div style="font-size: 14px; color: #303133;">{{ userInfo.username || '未登录' }}</div>
-                      <div style="font-size: 12px; color: #909399; margin-top: 2px;">{{ userInfo.email || '' }}</div>
+                    <div style="text-align: center; padding: 5px 0">
+                      <div style="font-size: 14px; color: #303133">
+                        {{ userInfo.username || "未登录" }}
+                      </div>
+                      <div
+                        style="font-size: 12px; color: #909399; margin-top: 2px"
+                      >
+                        {{ userInfo.email || "" }}
+                      </div>
                     </div>
                   </el-dropdown-item>
                   <el-dropdown-item divided command="profile">
@@ -120,101 +147,182 @@
 </template>
 
 <script>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { computed, ref, onMounted, onUnmounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { ElMessage } from "element-plus";
+import { getCurrentPermissionTree } from "@/api/permission";
 
 export default {
-  name: 'Layout',
+  name: "Layout",
   setup() {
-    const router = useRouter()
-    const route = useRoute()
-    const currentTime = ref('')
-    let timer = null
+    const router = useRouter();
+    const route = useRoute();
+    const currentTime = ref("");
+    let timer = null;
+
+    // 菜单路由（根据权限树动态生成）
+    const menuRoutes = ref([]);
 
     // 获取用户信息
-    const userInfo = ref({})
+    const userInfo = ref({});
     const getUserInfoFromStorage = () => {
-      const userInfoStr = localStorage.getItem('userInfo')
+      const userInfoStr = localStorage.getItem("userInfo");
       if (userInfoStr) {
         try {
-          userInfo.value = JSON.parse(userInfoStr)
+          userInfo.value = JSON.parse(userInfoStr);
         } catch (error) {
-          console.error('解析用户信息失败：', error)
+          console.error("解析用户信息失败：", error);
         }
       }
-    }
+    };
 
     // 用户头像
     const userAvatar = computed(() => {
-      return userInfo.value.avatarUrl || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    })
+      return (
+        userInfo.value.avatarUrl ||
+        "https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+      );
+    });
 
     // 显示名称（优先用户名，否则邮箱前缀）
     const userDisplayName = computed(() => {
       if (userInfo.value.username) {
-        return userInfo.value.username
+        return userInfo.value.username;
       }
       if (userInfo.value.email) {
-        return userInfo.value.email.split('@')[0]
+        return userInfo.value.email.split("@")[0];
       }
-      return '管理员'
-    })
+      return "管理员";
+    });
 
-    // 获取菜单路由
-    const menuRoutes = computed(() => {
-      return router.options.routes.filter(route => 
-        route.path !== '/login' && route.meta?.title
-      )
-    })
+    // 根据权限树构建可见菜单路由
+    const buildMenuRoutesByPermission = (permissionTree) => {
+      // 收集当前用户所有可访问的菜单路径（仅 type === 1 的菜单权限）
+      const allowedPaths = new Set();
+
+      const traverse = (nodes) => {
+        if (!Array.isArray(nodes)) return;
+        nodes.forEach((node) => {
+          // 仅菜单类型，并且启用状态才参与菜单渲染
+          if (node.type === 1 && (node.status === true || node.status === 1)) {
+            if (node.path) {
+              allowedPaths.add(node.path);
+            }
+          }
+          if (node.childrenPermission && node.childrenPermission.length > 0) {
+            traverse(node.childrenPermission);
+          }
+        });
+      };
+
+      traverse(permissionTree);
+
+      // 基于静态路由配置进行过滤，保留图标和标题等 meta 信息
+      const allRoutes = router.options.routes.filter(
+        (r) => r.path !== "/login" && r.meta?.title
+      );
+
+      // 如果后端暂未返回任何菜单（例如还未配置权限），则回退为展示所有菜单
+      const noPermissionLimit = allowedPaths.size === 0;
+
+      const visibleRoutes = [];
+
+      allRoutes.forEach((rootRoute) => {
+        if (!rootRoute.children || rootRoute.children.length === 0) {
+          return;
+        }
+
+        const newRoot = {
+          ...rootRoute,
+          children: [],
+        };
+
+        rootRoute.children.forEach((child) => {
+          // 计算子路由的完整路径，与权限表中的 path 对齐
+          const fullPath =
+            rootRoute.path === "/"
+              ? `/${child.path}`
+              : `${rootRoute.path}/${child.path}`;
+
+          if (noPermissionLimit || allowedPaths.has(fullPath)) {
+            newRoot.children.push(child);
+          }
+        });
+
+        // 仅当该一级菜单下仍有子菜单时，才加入到侧边栏
+        if (newRoot.children.length > 0) {
+          visibleRoutes.push(newRoot);
+        }
+      });
+
+      menuRoutes.value = visibleRoutes;
+    };
+
+    // 加载当前用户权限树并构建菜单
+    const loadMenuPermissions = async () => {
+      try {
+        const tree = await getCurrentPermissionTree();
+        buildMenuRoutesByPermission(tree || []);
+      } catch (error) {
+        console.error("获取当前用户权限树失败：", error);
+        // 如果接口异常，降级为展示全部静态菜单，避免界面空白
+        buildMenuRoutesByPermission([]);
+        ElMessage.error("加载菜单权限失败，已使用默认菜单");
+      }
+    };
 
     // 当前激活的菜单
     const activeMenu = computed(() => {
-      return route.path
-    })
+      return route.path;
+    });
 
     // 当前路由名称
     const currentRoute = computed(() => {
-      return route.meta?.title || ''
-    })
+      return route.meta?.title || "";
+    });
 
     // 更新时间
     const updateTime = () => {
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      const seconds = String(now.getSeconds()).padStart(2, '0')
-      currentTime.value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
-    }
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      currentTime.value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
 
     // 处理下拉菜单命令
     const handleCommand = (command) => {
-      if (command === 'logout') {
-        localStorage.removeItem('token')
-        localStorage.removeItem('userInfo')
-        ElMessage.success('退出登录成功')
-        router.push('/login')
-      } else if (command === 'profile') {
-        ElMessage.info('个人中心功能开发中')
-      } else if (command === 'settings') {
-        router.push('/system/settings')
+      if (command === "logout") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("userInfo");
+        ElMessage.success("退出登录成功");
+        router.push("/login");
+      } else if (command === "profile") {
+        ElMessage.info("个人中心功能开发中");
+      } else if (command === "settings") {
+        router.push("/system/settings");
       }
-    }
+    };
 
     onMounted(() => {
-      getUserInfoFromStorage()
-      updateTime()
-      timer = setInterval(updateTime, 1000)
-    })
+      getUserInfoFromStorage();
+      updateTime();
+      timer = setInterval(updateTime, 1000);
+
+      // 每次进入布局页面时，根据当前用户权限重新加载菜单树
+      // 包括首次登录后刷新浏览器页面的场景
+      buildMenuRoutesByPermission([]); // 初始展示全部静态菜单，避免闪烁
+      loadMenuPermissions();
+    });
 
     onUnmounted(() => {
       if (timer) {
-        clearInterval(timer)
+        clearInterval(timer);
       }
-    })
+    });
 
     return {
       menuRoutes,
@@ -224,10 +332,10 @@ export default {
       userInfo,
       userAvatar,
       userDisplayName,
-      handleCommand
-    }
-  }
-}
+      handleCommand,
+    };
+  },
+};
 </script>
 
 <style scoped>
@@ -281,7 +389,8 @@ export default {
 }
 
 @keyframes phoenixFloat {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -290,7 +399,8 @@ export default {
 }
 
 @keyframes phoenixPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.05;
     transform: translate(-50%, -50%) scale(1);
   }
@@ -423,4 +533,3 @@ export default {
   transform: translateX(-20px);
 }
 </style>
-
