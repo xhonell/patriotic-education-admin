@@ -36,8 +36,6 @@ service.interceptors.response.use(
     // 根据后端 Result 统一响应格式处理
     // 假设后端返回格式：{ code: 200, message: 'success', data: {} }
     if (res.code && res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
-
       // 401: 未授权，token 过期或无效
       if (res.code === 401) {
         ElMessage.error('登录已过期，请重新登录')
@@ -46,11 +44,20 @@ service.interceptors.response.use(
         router.push('/login')
       }
 
+      // 402 / 403：业务上的无权限，统一跳转无权限页面
+      if (res.code === 402 || res.code === 403) {
+        ElMessage.error(res.message || '没有权限访问')
+        router.push('/no-permission')
+      } else if (res.code !== 401) {
+        // 其他业务错误只提示，不跳转
+        ElMessage.error(res.message || '请求失败')
+      }
+
       return Promise.reject(new Error(res.message || '请求失败'))
-    } else {
-      // 返回数据
-      return res.data
     }
+
+    // 正常业务返回
+    return res.data
   },
   error => {
     console.error('响应错误：', error)

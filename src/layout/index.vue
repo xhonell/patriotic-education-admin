@@ -176,6 +176,14 @@ export default {
       }
     };
 
+    // 是否为“展示所有菜单”的用户（例如超级管理员）
+    // 这里以 userId === 1 为例，你可以根据实际字段自行调整判断条件
+    const showAllMenuUser = computed(() => {
+      const id = userInfo.value?.id;
+      // 约定：ID 为 1 的用户查看所有菜单，或者后端标记了 superAdmin 字段
+      return id === 1 || userInfo.value?.superAdmin === true;
+    });
+
     // 用户头像
     const userAvatar = computed(() => {
       return (
@@ -197,6 +205,15 @@ export default {
 
     // 根据权限树构建可见菜单路由
     const buildMenuRoutesByPermission = (permissionTree) => {
+      // 特殊用户：直接展示所有静态菜单（不做权限过滤）
+      if (showAllMenuUser.value) {
+        const allRoutes = router.options.routes.filter(
+          (r) => r.path !== "/login" && r.meta?.title
+        );
+        menuRoutes.value = allRoutes;
+        return;
+      }
+
       // 收集当前用户所有可访问的菜单路径（仅 type === 1 的菜单权限）
       const allowedPaths = new Set();
 
