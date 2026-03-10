@@ -77,3 +77,10 @@ export function deletePolitic(id) {
   })
 }
 
+export function getPoliticOptions(params) {
+  return request({
+    url: '/admin/politic/options',
+    method: 'get',
+    params
+  })
+}

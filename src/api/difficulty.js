@@ -79,3 +79,10 @@ export function updateDifficultyStatus(id, status) {
   })
 }
 
+export function getDifficultyOptions(params) {
+  return request({
+    url: '/admin/difficulty/options',
+    method: 'get',
+    params
+  })
+}

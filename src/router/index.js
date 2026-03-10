@@ -84,8 +84,15 @@ const routes = [
         meta: { title: "积分难度管理", icon: "Star" },
       },
       {
+        path: "tag",
+        name: "TagManagement",
+        component: () => import("@/views/content/tag.vue"),
+        meta: { title: "标签管理", icon: "CollectionTag" },
+      },
+      {
         path: "add",
         name: "ContentAdd",
+        hidden: true,
         component: () => import("@/views/content/add.vue"),
         meta: { title: "添加内容", icon: "Plus" },
       },

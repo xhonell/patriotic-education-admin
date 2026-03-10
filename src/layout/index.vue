@@ -207,9 +207,13 @@ export default {
     const buildMenuRoutesByPermission = (permissionTree) => {
       // 特殊用户：直接展示所有静态菜单（不做权限过滤）
       if (showAllMenuUser.value) {
-        const allRoutes = router.options.routes.filter(
-          (r) => r.path !== "/login" && r.meta?.title
-        );
+        const allRoutes = router.options.routes
+          .filter((r) => r.path !== "/login" && r.meta?.title && !r.hidden)
+          .map((r) => ({
+            ...r,
+            children: (r.children || []).filter((c) => !c.hidden),
+          }))
+          .filter((r) => !r.children || r.children.length > 0);
         menuRoutes.value = allRoutes;
         return;
       }
@@ -235,9 +239,13 @@ export default {
       traverse(permissionTree);
 
       // 基于静态路由配置进行过滤，保留图标和标题等 meta 信息
-      const allRoutes = router.options.routes.filter(
-        (r) => r.path !== "/login" && r.meta?.title
-      );
+      const allRoutes = router.options.routes
+        .filter((r) => r.path !== "/login" && r.meta?.title && !r.hidden)
+        .map((r) => ({
+          ...r,
+          children: (r.children || []).filter((c) => !c.hidden),
+        }))
+        .filter((r) => !r.children || r.children.length > 0);
 
       // 如果后端暂未返回任何菜单（例如还未配置权限），则回退为展示所有菜单
       const noPermissionLimit = allowedPaths.size === 0;
