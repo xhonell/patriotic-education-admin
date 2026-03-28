@@ -33,6 +33,19 @@ export function addUser(data) {
 }
 
 /**
+ * 新增管理员
+ * @param {Object} data - 管理员信息
+ * @returns {Promise}
+ */
+export function createAdmin(data) {
+  return request({
+    url: '/admin/user/create',
+    method: 'post',
+    data
+  })
+}
+
+/**
  * 更新用户
  * @param {Object} data - 用户信息
  * @returns {Promise}

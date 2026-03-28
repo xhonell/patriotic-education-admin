@@ -42,6 +42,9 @@
           <el-button :icon="Refresh" @click="handleReset">
             重置
           </el-button>
+          <el-button type="success" :icon="Plus" @click="openAdminDialog">
+            新增管理员
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -87,15 +90,6 @@
         <el-table-column label="操作" width="280" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-tooltip content="查看详情" placement="top">
-                <el-button 
-                  type="primary" 
-                  :icon="View" 
-                  circle 
-                  size="small"
-                  @click="handleView(row)"
-                />
-              </el-tooltip>
               <el-tooltip :content="isNormalUser(row) ? '普通用户不可分配角色' : '分配角色'" placement="top">
                 <el-button 
                   type="success" 
@@ -106,24 +100,7 @@
                   @click="handleAssignRole(row)"
                 />
               </el-tooltip>
-              <el-tooltip content="编辑用户" placement="top">
-                <el-button 
-                  type="warning" 
-                  :icon="Edit" 
-                  circle 
-                  size="small"
-                  @click="handleEdit(row)"
-                />
-              </el-tooltip>
-              <el-tooltip content="删除用户" placement="top">
-                <el-button 
-                  type="danger" 
-                  :icon="Delete" 
-                  circle 
-                  size="small"
-                  @click="handleDelete(row)"
-                />
-              </el-tooltip>
+
             </div>
           </template>
         </el-table-column>
@@ -132,8 +109,8 @@
       <!-- 分页 -->
       <div class="pagination">
         <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
+          :current-page="pagination.page"
+          :page-size="pagination.pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="pagination.total"
           layout="total, sizes, prev, pager, next, jumper"
@@ -142,6 +119,38 @@
         />
       </div>
     </div>
+
+    <!-- 新增管理员对话框 -->
+    <el-dialog v-model="adminDialogVisible" title="新增管理员" width="520px" destroy-on-close>
+      <el-form ref="adminFormRef" :model="adminForm" :rules="adminRules" label-width="100px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="adminForm.username" maxlength="20" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="adminForm.password" type="password" show-password maxlength="20" placeholder="请输入密码" />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="adminForm.confirmPassword" type="password" show-password maxlength="20" placeholder="请再次输入密码" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="adminForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="adminForm.phone" maxlength="11" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="adminForm.role" placeholder="请选择角色" style="width: 100%">
+            <el-option label="普通用户" :value="1" />
+            <el-option label="教师" :value="2" />
+            <el-option label="系统管理员" :value="3" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="adminDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="createLoading" @click="handleCreateAdmin">确定</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 角色分配对话框 -->
     <UserRoleDialog 
@@ -155,9 +164,9 @@
 
 <script>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { View, Edit, Delete, Search, Refresh, UserFilled } from '@element-plus/icons-vue'
-import { getUserList, updateUserStatus, deleteUser } from '@/api/user'
+import { ElMessage } from 'element-plus'
+import { Search, Refresh, UserFilled, Plus } from '@element-plus/icons-vue'
+import { getUserList, updateUserStatus, createAdmin } from '@/api/user'
 import { getRoleName, formatTime } from '@/types/user'
 import UserRoleDialog from '@/components/UserRoleDialog.vue'
 
@@ -170,7 +179,10 @@ export default {
     const loading = ref(false)
     const roleDialogVisible = ref(false)
     const selectedUser = ref({})
-    
+    const adminDialogVisible = ref(false)
+    const createLoading = ref(false)
+    const adminFormRef = ref(null)
+
     const searchForm = reactive({
       username: '',
       email: '',
@@ -184,6 +196,52 @@ export default {
     })
 
     const userList = ref([])
+
+    const adminForm = reactive({
+      username: '',
+      password: '',
+      confirmPassword: '',
+      email: '',
+      phone: '',
+      role: 2,
+      avatarId: null
+    })
+
+    const validateConfirmPassword = (_rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请再次输入密码'))
+        return
+      }
+      if (value !== adminForm.password) {
+        callback(new Error('两次输入密码不一致'))
+        return
+      }
+      callback()
+    }
+
+    const adminRules = {
+      username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' },
+        { min: 3, max: 20, message: '用户名长度应在3-20个字符之间', trigger: 'blur' }
+      ],
+      password: [
+        { required: true, message: '请输入密码', trigger: 'blur' },
+        { min: 6, max: 20, message: '密码长度应在6-20个字符之间', trigger: 'blur' }
+      ],
+      confirmPassword: [
+        { validator: validateConfirmPassword, trigger: 'blur' }
+      ],
+      email: [
+        { required: true, message: '请输入邮箱', trigger: 'blur' },
+        { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+      ],
+      phone: [
+        { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
+      ],
+      role: [
+        { required: true, message: '请选择角色', trigger: 'change' }
+      ]
+    }
 
     // 获取用户列表
     const loadUserList = async () => {
@@ -252,11 +310,6 @@ export default {
       }
     }
 
-    // 查看用户
-    const handleView = (row) => {
-      ElMessage.info(`查看用户：${row.username}`)
-    }
-
     // 分配角色
     const handleAssignRole = (row) => {
       if (isNormalUser(row)) {
@@ -273,33 +326,36 @@ export default {
       loadUserList()
     }
 
-    // 编辑用户
-    const handleEdit = (row) => {
-      ElMessage.info(`编辑用户：${row.username}`)
+    const resetAdminForm = () => {
+      adminForm.username = ''
+      adminForm.password = ''
+      adminForm.confirmPassword = ''
+      adminForm.email = ''
+      adminForm.phone = ''
+      adminForm.role = 3
+      adminForm.avatarId = null
+      adminFormRef.value?.clearValidate()
     }
 
-    // 删除用户
-    const handleDelete = (row) => {
-      ElMessageBox.confirm(
-        `确定要删除用户 ${row.username} 吗？`,
-        '提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      ).then(async () => {
-        try {
-          await deleteUser(row.id)
-          ElMessage.success('删除成功')
-          loadUserList()
-        } catch (error) {
-          console.error('删除失败：', error)
-          ElMessage.error('删除失败')
-        }
-      }).catch(() => {
-        ElMessage.info('已取消删除')
-      })
+    const openAdminDialog = () => {
+      resetAdminForm()
+      adminDialogVisible.value = true
+    }
+
+    const handleCreateAdmin = async () => {
+      if (!adminFormRef.value) return
+      try {
+        await adminFormRef.value.validate()
+        createLoading.value = true
+        await createAdmin({ ...adminForm })
+        ElMessage.success('新增管理员成功')
+        adminDialogVisible.value = false
+        loadUserList()
+      } catch (error) {
+        console.error('新增管理员失败：', error)
+      } finally {
+        createLoading.value = false
+      }
     }
 
     // 分页大小改变
@@ -343,6 +399,11 @@ export default {
       userList,
       roleDialogVisible,
       selectedUser,
+      adminDialogVisible,
+      createLoading,
+      adminFormRef,
+      adminForm,
+      adminRules,
       getRoleName,
       formatTime,
       getRoleType,
@@ -350,21 +411,18 @@ export default {
       handleSearch,
       handleReset,
       handleStatusChange,
-      handleView,
       handleAssignRole,
       handleRoleAssignSuccess,
-      handleEdit,
-      handleDelete,
+      openAdminDialog,
+      handleCreateAdmin,
       handleSizeChange,
       handleCurrentChange,
       isNormalUser,
       // 图标
-      View,
-      Edit,
-      Delete,
       Search,
       Refresh,
-      UserFilled
+      UserFilled,
+      Plus
     }
   }
 }
