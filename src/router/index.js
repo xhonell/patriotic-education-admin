@@ -99,6 +99,33 @@ const routes = [
     ],
   },
   {
+    path: "/exam",
+    component: Layout,
+    redirect: "/exam/paper",
+    meta: { title: "考试管理", icon: "Notebook" },
+    children: [
+      {
+        path: "paper",
+        name: "ExamPaperManagement",
+        component: () => import("@/views/exam/paper.vue"),
+        meta: { title: "试卷管理", icon: "Document" },
+      },
+      {
+        path: "paper-edit",
+        name: "ExamPaperEdit",
+        hidden: true,
+        component: () => import("@/views/exam/paper-edit.vue"),
+        meta: { title: "试卷编辑", icon: "Edit" },
+      },
+      {
+        path: "record",
+        name: "ExamRecordManagement",
+        component: () => import("@/views/exam/record.vue"),
+        meta: { title: "考试记录", icon: "Tickets" },
+      },
+    ],
+  },
+  {
     path: "/recommend",
     component: Layout,
     redirect: "/recommend/system",
